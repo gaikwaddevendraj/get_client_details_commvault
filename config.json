@@ -1,0 +1,22 @@
+{
+  "commcells": [
+    {
+      "name": "commcell1_hostname",
+      "username": "your_username",
+      "password": "your_password",
+      "region": "HK"
+    },
+    {
+      "name": "commcell2_hostname",
+      "username": "your_username",
+      "password": "your_password",
+      "region": "UK"
+    },
+    {
+      "name": "commcell3_hostname",
+      "username": "your_username",
+      "password": "your_password",
+      "region": "US"
+    }
+  ]
+}

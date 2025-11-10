@@ -1,0 +1,6 @@
+# Ignore the config.json file
+config.json
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
