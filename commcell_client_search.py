@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import os
 import logging
 from cvpysdk.commcell import Commcell
-from cachetools import cached, TTLCache
+from diskcache import Cache
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -42,20 +42,26 @@ def main():
         return
 
     results = {}
-    commcell_caches = {commcell_info['name']: TTLCache(maxsize=1, ttl=7200) for commcell_info in commcells_in_region}
+    cache_dir = "commcell_cache"
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+
+    commcell_caches = {commcell_info['name']: Cache(os.path.join(cache_dir, commcell_info['name'].replace(" ", "_")), expire=7200) for commcell_info in commcells_in_region}
 
     for commcell_info in commcells_in_region:
         try:
             commcell = Commcell(commcell_info['name'], commcell_info['username'], commcell_info['password'])
             logging.info(f"Connected to CommCell: {commcell_info['name']}")
 
-            @cached(commcell_caches[commcell_info['name']])
-            def get_all_clients():
-                """Fetches all clients from the Commcell."""
-                logging.info(f"Fetching clients from {commcell_info['name']}...")
-                return commcell.clients.all_clients
+            cache = commcell_caches[commcell_info['name']]
+            clients = cache.get('all_clients')
 
-            clients = get_all_clients()
+            if clients is None:
+                logging.info(f"Fetching clients from {commcell_info['name']}...")
+                clients = commcell.clients.all_clients
+                cache.set('all_clients', clients)
+            else:
+                logging.info(f"Loading clients from cache for {commcell_info['name']}...")
 
             for client_id, client_properties in clients.items():
                 if client_name.lower() in client_properties['client_name'].lower():
